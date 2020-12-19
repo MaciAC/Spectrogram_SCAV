@@ -36,11 +36,14 @@ def print_powers_of_2():
     return ns
 
 def compute_magnitude_windowed_fft(signal, window):
-    signal = signal / np.max(np.abs(signal))
+    if signal.dtype == 'uint8':
+        signal = np.array(signal, dtype=np.int32) - 128
+        signal = signal / 128
+    if signal.dtype == 'int16':
+        signal = signal / 32768
     w_windowed = signal * window
     x_mag = abs(fft(w_windowed))
     dB_mag = 10*np.log(x_mag)
-    dB_mag[dB_mag < 0] = 0
     return dB_mag
 
 
@@ -59,9 +62,10 @@ def compute_spectrogram(signal, sr, fft_size, hop_size, window):
 
 def plot_spectrogram(spectrogram, sr, n_samples, filename, fft_size, hop_size):
     plt.clf()
-    plt.imshow(spectrogram.T, extent=[0, n_samples//sr ,0 ,sr//2], aspect = 'auto')
+    plt.imshow(spectrogram.T, extent=[0, n_samples//sr , 20, sr//2], aspect = 'auto')
     plt.ylabel('Frequency [Hz]')
     plt.xlabel('Time [s]')
+    plt.yscale('symlog')
     plt.title('Spectrogram')
     plt.colorbar().set_label('Amplitude [dB]')
     plt.savefig('{}_{}_{}.png'.format(filename.split('.')[0],fft_size,hop_size))
@@ -84,7 +88,6 @@ while menu:
     print_windows()
     idx = int(input("Choose the window type"))
     window = windows[idx]
-
     sr, signal = read(filename)
 
     spec = compute_spectrogram(signal, sr, fft_size, hop_size, window)
