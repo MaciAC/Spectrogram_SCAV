@@ -35,14 +35,19 @@ def print_powers_of_2():
         ns.append(num)
     return ns
 
-def compute_magnitude_windowed_fft(signal, window):
+def compute_magnitude_windowed_fft(signal, window, fft_size):
     if signal.dtype == 'uint8':
         signal = np.array(signal, dtype=np.int32) - 128
         signal = signal / 128
     if signal.dtype == 'int16':
         signal = signal / 32768
     w_windowed = signal * window
-    x_mag = abs(fft(w_windowed))
+    plt.plot()
+    padding = np.zeros(fft_size*2)
+    padding[fft_size//2:fft_size//2 + fft_size] = w_windowed
+
+
+    x_mag = abs(fft(padding))
     dB_mag = 10*np.log(x_mag)
     return dB_mag
 
@@ -53,7 +58,7 @@ def compute_spectrogram(signal, sr, fft_size, hop_size, window):
     idx_last = fft_size
     while idx_last < len(signal):
         current_slice = signal[idx_last - fft_size : idx_last]
-        spectrum = compute_magnitude_windowed_fft(current_slice, blackman(fft_size))[Mag_size:-1]
+        spectrum = compute_magnitude_windowed_fft(current_slice, window, fft_size)[Mag_size:-1]
         spectrogam.append(spectrum)
         idx_last += hop_size
 
